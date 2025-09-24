@@ -1,0 +1,8 @@
+{
+  "name": "az-servant",
+  "description": "Azure plan/apply/request tools over MCP stdio (no LLM on server)",
+  "command": ["python", "mcp_std_server.py"],
+  "env": {
+    "PYTHONUNBUFFERED": "1"
+  }
+}

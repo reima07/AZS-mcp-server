@@ -1,0 +1,445 @@
+commonRegions:
+  - koreacentral
+  - koreasouth
+  - eastus
+  - eastus2
+  - westus
+  - westus2
+  - westeurope
+  - northeurope
+  - southeastasia
+  - eastasia
+  - japaneast
+  - japanwest
+  - australiaeast
+  - australiasoutheast
+resourceTypes:
+  Microsoft.Resources/resourceGroups:
+    description: "Azure Resource Group"
+    aliases:
+      - "리소스 그룹"
+      - "resource group"
+      - "rg"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "리소스 그룹 이름"
+        type: string
+        required: true
+        pattern: '^[A-Za-z0-9_.\\-]+$'
+        hint: "예: rg-demo"
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+        hint: "예: koreacentral"
+  Microsoft.ContainerRegistry/registries:
+    description: "Azure Container Registry"
+    aliases:
+      - "acr"
+      - "컨테이너 레지스트리"
+      - "registry"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "ACR 이름"
+        type: string
+        required: true
+        pattern: '^[a-z0-9]{5,50}$'
+        hint: "영문소문자/숫자 5~50자"
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+        pattern: '^rg[-A-Za-z0-9_.\\-]+$'
+        hint: "예: rg-jiwoo-test"
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+        hint: "예: koreacentral"
+      - key: sku
+        label: "SKU"
+        type: enum
+        required: false
+        enum:
+          - Basic
+          - Standard
+          - Premium
+        default: Basic
+  Microsoft.KeyVault/vaults:
+    description: "Azure Key Vault"
+    aliases:
+      - "키볼트"
+      - "keyvault"
+      - "kv"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "Key Vault 이름"
+        type: string
+        required: true
+        pattern: '^[a-z0-9-]{3,24}$'
+        hint: "소문자/숫자/하이픈 3~24자"
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+        pattern: '^rg[-A-Za-z0-9_.\\-]+$'
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: sku
+        label: "SKU"
+        type: enum
+        required: false
+        enum:
+          - standard
+          - premium
+        default: standard
+  Microsoft.EventHub/namespaces:
+    description: "Azure Event Hubs Namespace"
+    aliases:
+      - "이벤트허브"
+      - "eventhub"
+      - "event hubs"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "Event Hubs Namespace"
+        type: string
+        required: true
+        pattern: '^[a-z0-9-]{6,50}$'
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: sku
+        label: "SKU"
+        type: enum
+        required: false
+        enum:
+          - Basic
+          - Standard
+          - Premium
+        default: Standard
+  Microsoft.ContainerService/managedClusters:
+    description: "Azure Kubernetes Service"
+    aliases:
+      - "aks"
+      - "kubernetes"
+      - "쿠버네티스"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "AKS 이름"
+        type: string
+        required: true
+        pattern: '^[a-zA-Z0-9_-]{1,63}$'
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: nodeCount
+        label: "노드 수"
+        type: integer
+        required: false
+        default: 1
+        min: 1
+      - key: nodeVmSize
+        label: "노드 VM 사이즈"
+        type: string
+        required: false
+        default: Standard_B2s
+  Microsoft.DBforPostgreSQL/flexibleServers:
+    description: "Azure Database for PostgreSQL Flexible"
+    aliases:
+      - "postgres"
+      - "postgresql"
+      - "데이터베이스"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "PostgreSQL 서버 이름"
+        type: string
+        required: true
+        pattern: '^[a-z0-9-]{3,63}$'
+        hint: "소문자/숫자/하이픈 3~63자"
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+        pattern: '^rg[-A-Za-z0-9_.\\-]+$'
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: adminUser
+        label: "관리자 사용자"
+        type: string
+        required: true
+      - key: adminPassword
+        label: "관리자 비밀번호"
+        type: string
+        required: true
+        secret: true
+      - key: version
+        label: "버전"
+        type: enum
+        required: false
+        enum:
+          - "16"
+          - "15"
+          - "14"
+          - "13"
+        default: "14"
+      - key: skuName
+        label: "SKU 이름"
+        type: string
+        required: false
+        default: Standard_B1ms
+      - key: storageSizeGB
+        label: "스토리지(GB)"
+        type: integer
+        required: false
+        default: 32
+        min: 20
+  Microsoft.Compute/disks:
+    description: "Azure Managed Disk"
+    aliases:
+      - "disk"
+      - "디스크"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "디스크 이름"
+        type: string
+        required: true
+        pattern: '^[A-Za-z0-9_.\\-]{1,80}$'
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+        pattern: '^rg[-A-Za-z0-9_.\\-]+$'
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: sizeGB
+        label: "크기(GB)"
+        type: integer
+        required: true
+        min: 4
+        default: 32
+      - key: sku
+        label: "SKU"
+        type: enum
+        required: false
+        enum:
+          - Standard_LRS
+          - Premium_LRS
+          - StandardSSD_LRS
+          - UltraSSD_LRS
+        default: StandardSSD_LRS
+  Microsoft.Storage/storageAccounts:
+    description: "Azure Storage Account"
+    aliases:
+      - "스토리지"
+      - "storage"
+      - "storage account"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "Storage 이름"
+        type: string
+        required: true
+        pattern: '^[a-z0-9]{3,24}$'
+        hint: "소문자/숫자 3~24자"
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: sku
+        label: "SKU"
+        type: enum
+        required: false
+        enum:
+          - Standard_LRS
+          - Premium_LRS
+          - StandardSSD_LRS
+          - UltraSSD_LRS
+        default: Standard_LRS
+      - key: kind
+        label: "Kind"
+        type: enum
+        required: false
+        enum:
+          - StorageV2
+          - BlobStorage
+        default: StorageV2
+  Microsoft.Cache/Redis:
+    description: "Azure Cache for Redis"
+    aliases:
+      - "redis"
+      - "cache"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "Redis 이름"
+        type: string
+        required: true
+        pattern: '^[a-zA-Z0-9-]{1,63}$'
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: sku
+        label: "SKU"
+        type: enum
+        required: false
+        enum:
+          - Basic
+          - Standard
+          - Premium
+        default: Basic
+      - key: vmSize
+        label: "VM Size"
+        type: enum
+        required: false
+        enum:
+          - c0
+          - c1
+          - c2
+          - c3
+          - c4
+          - c5
+          - c6
+        default: c0
+  Microsoft.Network/virtualNetworks:
+    description: "Azure Virtual Network"
+    aliases:
+      - "vnet"
+      - "가상 네트워크"
+      - "virtual network"
+    operations:
+      plan: true
+      spec: true
+      create: true
+      delete: true
+    params:
+      - key: name
+        label: "VNet 이름"
+        type: string
+        required: true
+        pattern: '^[A-Za-z0-9_.\\-]{1,80}$'
+      - key: resourceGroup
+        label: "리소스 그룹"
+        type: string
+        required: true
+      - key: location
+        label: "리전"
+        type: enum
+        required: true
+        enum: "@commonRegions"
+      - key: addressPrefixes
+        label: "주소 공간"
+        type: array
+        required: false
+        hint: "예: 10.0.0.0/16"
+  Microsoft.Network/networkSecurityGroups:
+    description: "Azure Network Security Group"
+    aliases:
+      - "nsg"
+      - "보안 그룹"
+      - "security group"
+    operations:
+      plan: true
+      spec: false
+      create: false
+      delete: false
+    params: []
+  Microsoft.Compute/virtualMachineScaleSets:
+    description: "Azure Virtual Machine Scale Sets"
+    aliases:
+      - "vmss"
+      - "스케일셋"
+    operations:
+      plan: true
+      spec: false
+      create: false
+      delete: false
+    params: []
+  Microsoft.Compute/virtualMachines:
+    description: "Azure Virtual Machines"
+    aliases:
+      - "vm"
+      - "가상 머신"
+      - "virtual machine"
+    operations:
+      plan: true
+      spec: false
+      create: false
+      delete: false
+    params: []

@@ -1,0 +1,26 @@
+# MCP Client — 규칙(로컬 전용)
+
+## 먼저 읽기
+- README.md
+- docs/CHANGELOG.md
+- docs/releases/* (가장 최신)
+- docs/prompts/* (현재 작업 버전 프롬프트)
+
+## 문서/변경이력
+- 사용자에 보이는 변경이 있으면 docs/CHANGELOG.md의 Unreleased를 갱신합니다.
+- 릴리스 태깅 시 docs/releases/<version>.md를 템플릿으로 생성합니다.
+- 과거 기록은 삭제하지 말고 Append 원칙을 지킵니다.
+
+## 브랜치/버전(로컬 전용)
+- `main`에 커밋하거나 짧은 로컬 브랜치 후 로컬에서 머지합니다.
+- 릴리스는 Annotated tag(`vX.Y.Z`)로만 관리합니다(원격 없음).
+
+## 스타일/보안
+- Python 3.10+, FastAPI 백엔드, 최소 HTML/CSS/JS UI.
+- 리포에 비밀 금지; .env/.env.example만 사용.
+- 문서 기본 언어: 한국어.
+- LLM은 클라이언트에서만 선택적으로 사용; 서버는 LLM 미사용.
+
+## UI 지침
+- 과도한 프레임워크 없이 간결 유지.
+- 구독/리소스그룹 드롭다운 제공, 안내 메시지 명확히.

@@ -1,0 +1,61 @@
+# AZ Servant — 리포 규칙 (Cursor, 이 문서부터 읽기)
+
+## 먼저 반드시 읽을 문서
+- README.md
+- docs/CHANGELOG.md
+- docs/releases/* (가장 최신 버전 파일)
+- docs/TROUBLESHOOTING.md
+- docs/SPEC_current.md (있다면)
+- docs/decisions/*.md
+
+## 현재 버전 목표 파악
+- README 또는 docs/CHANGELOG.md 상단에서 현재 타깃 버전을 식별.
+- 현재 버전이 반드시 전달해야 할 범위/수용기준을 요약 후 코딩 시작.
+
+## 버전별 구현 프롬프트 분리
+- 세부 구현 지시는 `.cursorrules`가 아닌 `docs/prompts/<version>.md`에 둔다.
+- 현재 작업 대상: `docs/prompts/v0.2.0.md` (RBAC + Policy 점검)
+- `.cursorrules`는 리포 전반 규칙(문서, 기록 보존, 보안, 로컬 깃 원칙)만 유지.
+
+## 코드 변경 시 문서도 같이 갱신
+- docs/CHANGELOG.md: “Unreleased” 아래에 Added/Changed/Fixed를 반드시 추가
+- docs/releases/<next-version>.md: 릴리스 임박 시 하이라이트/마이그레이션 메모 작성
+- docs/SPEC_current.md: 스코프/수용 기준 변동 반영
+- docs/TROUBLESHOOTING.md: 의미 있는 이슈를 해결했다면 추가
+- docs/decisions/*: 아키텍처 결정이 바뀌었다면 새 ADR 추가(기존 ADR 삭제 금지)
+
+## 릴리스 노트 작성 규칙
+- 위치: `docs/releases/<version>.md`, 템플릿은 `docs/releases/_template.md` 활용
+- 섹션 구성(권장):
+  - Highlights — 핵심 기능/변경 요약(3–5줄)
+  - Install & Run — 실행 방법 코드블럭
+  - Test — 검증 명령어(순서/예시 curl 포함)
+  - Results — 테스트 결과 요약(응답 샘플/관찰사항)
+  - Screenshots & Evidence (선택) — 스크린샷/로그/증빙 링크
+  - Known Limitations — 알려진 제약/미지원 항목
+  - Next Plan — 다음 버전 계획 요약
+- 원칙: 스크린샷 등 대용량 산출물은 외부 저장소 링크 또는 압축 번들 참조, 리포에는 텍스트 우선
+
+## 브랜치 & 버전 태깅 (로컬 전용)
+- 단순 모드: 바로 `main`에 커밋(필요 시 짧은 로컬 브랜치 → 로컬 머지)
+- 버전은 로컬 annotated tag만 사용: `vX.Y.Z` (원격/PR/Actions 전제 없음)
+- 새 엔드포인트 추가 시 README에 curl 예시 제안.
+
+## 변경 이력/기록 보존(중요)
+- 과거 기록/릴리스/ADR/문단을 삭제하거나 덮어쓰지 말 것. “추가(Append) 우선”.
+- CHANGELOG의 “Unreleased” 섹션은 항상 유지. 릴리스 시 해당 항목을 새로운 버전 섹션으로 “이동”만 함.
+- docs/releases/* 기존 파일은 삭제/축약 금지. 새 버전은 새 파일 추가.
+- ADR은 새 번호(0002, 0003, …)로 추가. 기존 ADR 파일 수정은 오탈자/링크 보정 정도만.
+- 대규모 리라이트/재포맷은 사전 승인 없이는 금지. 최소 변경(diff 최소화) 원칙.
+
+## 스타일/보안
+- Python 3.10+, FastAPI, 타입 힌트, pydantic 모델.
+- 리포에 비밀 금지; .env.example만 커밋.
+- 토큰/개인정보를 로그에 남기지 말 것.
+- 문서 기본 언어: 한국어(외부 고유명/포맷 예외 허용).
+- 서버는 LLM 미사용(요약/권고는 LangGraph 에이전트에서).
+
+## Apply 안전장치
+- 로컬 PoC: 승인 토큰 요구 없음(현재 설정)
+- 실환경 전환 시: 승인 토큰 또는 내부 러너/MI 게이트 도입, Plan(RBAC/Policy) 통과 필수
+- Plan(RBAC/Policy) 점검을 통과하지 못하면 4xx로 차단(조건부는 개발자 재량)

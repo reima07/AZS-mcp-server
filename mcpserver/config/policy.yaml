@@ -1,0 +1,10 @@
+enforcedLocation:
+  enabled: true
+  value: koreacentral
+  resourceTypes:
+    - "*"
+  message: "회사 정책상 모든 리소스는 koreacentral 리전에만 생성됩니다. 다른 리전 요청 시 자동으로 koreacentral로 변경됩니다."
+confirmation:
+  requireFor:
+    delete: true
+    nonRgCreate: true

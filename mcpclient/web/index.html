@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MCP Client — Chat</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <h1>AZ Servant — MCP Client</h1>
+        <div class="header-controls">
+          <div class="auth-status">
+            <span id="auth-status">Azure 인증 확인 중...</span>
+            <button id="login-btn" style="display: none;">터미널 로그인 안내</button>
+          </div>
+          <div class="status">세션: <span id="sid"></span></div>
+        </div>
+      </header>
+      <main>
+        <aside class="sidebar">
+          <div class="sidebar-section">
+            <h3>구독</h3>
+            <select id="subs"></select>
+          </div>
+          <div class="sidebar-section">
+            <h3>리소스 그룹</h3>
+            <div class="rg-controls">
+              <select id="rgs"></select>
+              <button id="refresh-rgs" title="리소스 그룹 목록 새로고침">🔄</button>
+            </div>
+          </div>
+          <div class="sidebar-section">
+            <h3>세션</h3>
+            <button id="reset-session" title="대화 기록 및 세션 초기화">🔄 초기화</button>
+          </div>
+        </aside>
+        <div class="chat-area">
+          <section id="chat"></section>
+        </div>
+      </main>
+      <footer>
+        <textarea id="input" placeholder="메시지를 입력하세요 (예: 내 구독 목록 보여줘)&#10;Shift+Enter로 줄바꿈, Enter로 전송" rows="1"></textarea>
+        <button id="send">보내기</button>
+      </footer>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+  </html>

@@ -1,0 +1,141 @@
+tools:
+  - name: azs.plan
+    summary: "Azure 리소스 계획 및 권한/정책 확인"
+    description: |
+      RBAC 권한과 정책 제약을 사전에 점검합니다.
+      mode에 따라 capabilities(권한), constraints(정책), check(생성 가능 여부)를 제공합니다.
+    arguments:
+      scope:
+        type: string
+        required: true
+        description: "Azure 스코프 (예: /subscriptions/<id> 또는 /subscriptions/<id>/resourceGroups/<name>)"
+      mode:
+        type: enum
+        required: false
+        default: capabilities
+        enum:
+          - capabilities
+          - constraints
+          - check
+        description: "확인할 모드"
+      resourceType:
+        type: string
+        required: false
+        description: "mode=check일 때 필요한 리소스 타입"
+      location:
+        type: string
+        required: false
+        description: "mode=check일 때 필요한 리전"
+      tags:
+        type: object
+        required: false
+        description: "선택 태그 (JSON)"
+    returns: "mode별 세부 결과"
+    agentHint: "권한/정책 점검 또는 생성 가능 여부 질문에 사용"
+  - name: azs.spec
+    summary: "리소스 타입별 파라미터 스펙"
+    description: "리소스 생성 시 필요한 필수/옵션 파라미터와 힌트를 제공합니다."
+    arguments:
+      resourceType:
+        type: string
+        required: true
+        description: "예: Microsoft.Storage/storageAccounts"
+    returns: "resourceType와 spec"
+    agentHint: "파라미터 수집/슬롯 채우기에 사용"
+  - name: azs.apply
+    summary: "Azure 리소스 생성/삭제/업데이트"
+    description: |
+      승인된 작업을 실제로 수행합니다. create/update/delete 액션을 지원하며
+      일부 리소스는 CLI 기반으로 구현되었습니다.
+    arguments:
+      action:
+        type: enum
+        required: true
+        enum:
+          - create
+          - delete
+          - update
+        description: "수행할 액션"
+      resourceType:
+        type: string
+        required: true
+        description: "타겟 리소스 타입"
+      scope:
+        type: string
+        required: true
+        description: "Azure 스코프"
+      params:
+        type: object
+        required: false
+        description: "리소스별 파라미터"
+      approvalToken:
+        type: string
+        required: false
+        description: "승인 토큰 (프로덕션용)"
+    returns: "실행 결과 또는 오류"
+    agentHint: "사용자가 실행을 확정했을 때 호출"
+  - name: azs.request
+    summary: "ServiceNow 신청서 템플릿 생성"
+    description: "권한 또는 정책 제한으로 차단된 작업을 ServiceNow 신청으로 전환합니다."
+    arguments:
+      blockedItems:
+        type: array
+        required: true
+        description: "차단된 작업 리스트"
+      scope:
+        type: string
+        required: true
+        description: "Azure 스코프"
+      userName:
+        type: string
+        required: false
+        description: "요청자 이름"
+      expiryDays:
+        type: integer
+        required: false
+        default: 90
+      subscriptionName:
+        type: string
+        required: false
+      confidence:
+        type: number
+        required: false
+    returns: "신청서 JSON/Markdown"
+    agentHint: "권한 부족 또는 정책 위반 시 대체 루트"
+  - name: azs.list_subscriptions
+    summary: "사용 가능한 구독 목록"
+    description: "현재 로그인된 계정이 접근 가능한 구독을 조회합니다."
+    arguments: {}
+    returns: "subscriptions 배열"
+    agentHint: "구독 선택 흐름"
+  - name: azs.list_resource_groups
+    summary: "리소스 그룹 목록"
+    description: "스코프 내 리소스 그룹을 나열합니다."
+    arguments:
+      scope:
+        type: string
+        required: true
+        description: "구독 또는 RG 스코프"
+    returns: "resourceGroups 배열"
+    agentHint: "리소스 그룹 선택 흐름"
+  - name: azs.list_resources
+    summary: "리소스 목록"
+    description: "스코프 내 리소스를 조회합니다."
+    arguments:
+      scope:
+        type: string
+        required: true
+      resourceType:
+        type: string
+        required: false
+    returns: "resources 배열"
+    agentHint: "리소스 찾기/검색"
+  - name: azs.get_resource
+    summary: "리소스 단건 조회"
+    description: "리소스 ID로 세부 정보를 가져옵니다."
+    arguments:
+      id:
+        type: string
+        required: true
+    returns: "resource 객체"
+    agentHint: "세부 조회"
