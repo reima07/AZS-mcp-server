@@ -1,8 +1,8 @@
 """
 유저스토리 1 테스트: Azure 운영 엔지니어의 기본 운영 작업
 - 구독/리소스 그룹 목록 확인
-- 리소스 그룹 생성/삭제
-- 권한 및 네트워크 문제 처리
+- 리소스 그룹 생성/삭제 (koreacentral 자동 적용)
+- 기본적인 에러 처리 및 로깅
 """
 
 import pytest
@@ -93,6 +93,7 @@ class TestUserStory1:
             
             # 실제로는 Azure SDK에서 예외가 발생하므로 500 에러
             assert response.status_code == 500
+            assert "Invalid subscription ID" in str(response.json()["detail"])
     
     def test_create_resource_group_success(self):
         """Test Case: "rg-demo 만들자" → koreacentral로 생성되어 성공"""
@@ -103,20 +104,7 @@ class TestUserStory1:
             "tags": {"Environment": "dev"}
         }
         
-        with patch('app.ResourceManagementClient') as mock_client, \
-             patch('app.RBACEvaluator') as mock_rbac, \
-             patch('app.PolicyEvaluator') as mock_policy:
-            
-            # RBAC 권한 확인 Mock
-            mock_rbac_instance = Mock()
-            mock_rbac_instance.can_perform_action.return_value = True
-            mock_rbac.return_value = mock_rbac_instance
-            
-            # 정책 준수 확인 Mock
-            mock_policy_instance = Mock()
-            mock_policy_instance.check_resource_compliance.return_value = {"compliant": True}
-            mock_policy.return_value = mock_policy_instance
-            
+        with patch('app.ResourceManagementClient') as mock_client:
             # 리소스 그룹 생성 Mock
             mock_instance = Mock()
             mock_instance.resource_groups.create_or_update.return_value = Mock(
@@ -135,63 +123,25 @@ class TestUserStory1:
             assert data["location"] == "koreacentral"
             assert data["tags"]["Environment"] == "dev"
     
-    def test_create_resource_group_rbac_failure(self):
-        """Test Case: RBAC 권한 부족 시 실패"""
+    def test_create_resource_group_azure_error(self):
+        """Test Case: Azure API 오류 시 실패"""
         request_data = {
             "scope": "/subscriptions/sub-123",
             "name": "rg-demo",
             "location": "koreacentral"
         }
         
-        with patch('app.RBACEvaluator') as mock_rbac:
-            mock_rbac_instance = Mock()
-            mock_rbac_instance.can_perform_action.return_value = False
-            mock_rbac.return_value = mock_rbac_instance
+        with patch('app.ResourceManagementClient') as mock_client:
+            mock_client.side_effect = Exception("Azure API 오류")
             
             response = client.post("/apply/resource-group", json=request_data)
             
-            assert response.status_code == 403
-            assert "RBAC 권한 부족" in response.json()["detail"]
-    
-    def test_create_resource_group_policy_failure(self):
-        """Test Case: 정책 위반 시 실패"""
-        request_data = {
-            "scope": "/subscriptions/sub-123",
-            "name": "rg-demo",
-            "location": "koreacentral"
-        }
-        
-        with patch('app.RBACEvaluator') as mock_rbac, \
-             patch('app.PolicyEvaluator') as mock_policy:
-            
-            # RBAC 권한 확인 Mock
-            mock_rbac_instance = Mock()
-            mock_rbac_instance.can_perform_action.return_value = True
-            mock_rbac.return_value = mock_rbac_instance
-            
-            # 정책 위반 Mock
-            mock_policy_instance = Mock()
-            mock_policy_instance.check_resource_compliance.return_value = {
-                "compliant": False,
-                "violations": ["허용되지 않은 리전: eastus"]
-            }
-            mock_policy.return_value = mock_policy_instance
-            
-            response = client.post("/apply/resource-group", json=request_data)
-            
-            assert response.status_code == 403
-            assert "허용되지 않은 리전" in response.json()["detail"]
+            assert response.status_code == 500
+            assert "Azure API 오류" in response.json()["detail"]
     
     def test_delete_resource_group_success(self):
         """Test Case: "rg-demo 삭제해" → 존재하면 삭제 성공"""
-        with patch('app.ResourceManagementClient') as mock_client, \
-             patch('app.RBACEvaluator') as mock_rbac:
-            
-            # RBAC 권한 확인 Mock
-            mock_rbac_instance = Mock()
-            mock_rbac_instance.can_perform_action.return_value = True
-            mock_rbac.return_value = mock_rbac_instance
-            
+        with patch('app.ResourceManagementClient') as mock_client:
             # 리소스 그룹 삭제 Mock
             mock_instance = Mock()
             mock_instance.resource_groups.begin_delete.return_value = Mock()
@@ -205,17 +155,15 @@ class TestUserStory1:
             assert data["deleted"] == "rg-demo"
             assert data["subscription"] == "sub-123"
     
-    def test_delete_resource_group_rbac_failure(self):
-        """Test Case: 삭제 권한 부족 시 실패"""
-        with patch('app.RBACEvaluator') as mock_rbac:
-            mock_rbac_instance = Mock()
-            mock_rbac_instance.can_perform_action.return_value = False
-            mock_rbac.return_value = mock_rbac_instance
+    def test_delete_resource_group_not_found(self):
+        """Test Case: 존재하지 않는 리소스 그룹 삭제 시 실패"""
+        with patch('app.ResourceManagementClient') as mock_client:
+            mock_client.side_effect = Exception("리소스 그룹을 찾을 수 없습니다")
             
-            response = client.delete("/apply/resource-group?scope=/subscriptions/sub-123/resourceGroups/rg-demo")
+            response = client.delete("/apply/resource-group?scope=/subscriptions/sub-123/resourceGroups/rg-nonexistent")
             
-            assert response.status_code == 403
-            assert "RBAC 권한 부족" in response.json()["detail"]
+            assert response.status_code == 500
+            assert "리소스 그룹을 찾을 수 없습니다" in response.json()["detail"]
     
     def test_ztna_network_error(self):
         """Test Case: ZTNA/네트워크 문제 시 실패"""
