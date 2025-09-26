@@ -16,13 +16,15 @@ from policy_eval import PolicyEvaluator
 
 # v0.3.0: MCP 툴
 from mcp_tools import MCPToolHandler, MCPToolRequest
-from catalog import load_tool_catalog
+from catalog import load_tool_catalog, enforced_location_policy
 
 load_dotenv()
 
 # (server) LLM 비사용 — LangGraph 에이전트에서만 사용
 
 app = FastAPI(title="AZ Servant — v0.3.0 (MCP Tools + Apply)")
+
+DEFAULT_RG_LOCATION = "koreacentral"
 
 def cred():
     """
@@ -282,7 +284,7 @@ def check_plan(scope: str = Query(..., description="Azure 스코프"),
 class RGCreateRequest(BaseModel):
     scope: str  # /subscriptions/<id>
     name: str
-    location: str
+    location: Optional[str] = None
     tags: Dict[str, str] | None = None
 
 @app.post("/apply/resource-group")
@@ -290,6 +292,9 @@ def create_resource_group(req: RGCreateRequest):
     if not validate_scope_format(req.scope):
         raise HTTPException(400, "잘못된 스코프 형식")
     try:
+        original_location = (req.location or "").strip()
+        target_location = DEFAULT_RG_LOCATION
+
         # 사전 점검(RBAC/Policy)
         rbac = RBACEvaluator(cred())
         required_action = "Microsoft.Resources/resourceGroups/write"
@@ -297,15 +302,38 @@ def create_resource_group(req: RGCreateRequest):
             raise HTTPException(403, f"RBAC 권한 부족: {required_action}")
 
         policy = PolicyEvaluator(cred())
-        compliance = policy.check_resource_compliance(req.scope, "Microsoft.Resources/resourceGroups", req.location, req.tags or {})
+        compliance = policy.check_resource_compliance(
+            req.scope,
+            "Microsoft.Resources/resourceGroups",
+            target_location,
+            req.tags or {}
+        )
         if not compliance["compliant"]:
             raise HTTPException(403, "; ".join(compliance["violations"]))
 
         # 생성
         sub_id, _ = parse_scope(req.scope)
         rgc = ResourceManagementClient(cred(), sub_id)
-        rg = rgc.resource_groups.create_or_update(req.name, {"location": req.location, "tags": req.tags or {}})
-        return {"ok": True, "id": f"/subscriptions/{sub_id}/resourceGroups/{req.name}", "location": req.location, "tags": req.tags or {}}
+        rgc.resource_groups.create_or_update(
+            req.name,
+            {"location": target_location, "tags": req.tags or {}}
+        )
+
+        policy_note: Optional[str] = None
+        policy_cfg = enforced_location_policy()
+        if policy_cfg.get("enabled"):
+            if not original_location or original_location.lower() != target_location.lower():
+                policy_note = policy_cfg.get("message") or f"회사 정책상 리전이 {target_location}로 자동 적용되었습니다."
+
+        response = {
+            "ok": True,
+            "id": f"/subscriptions/{sub_id}/resourceGroups/{req.name}",
+            "location": target_location,
+            "tags": req.tags or {}
+        }
+        if policy_note:
+            response["policyNote"] = policy_note
+        return response
     except HTTPException:
         raise
     except Exception as e:
